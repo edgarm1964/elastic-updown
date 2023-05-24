@@ -1,0 +1,32 @@
+{
+  "query":
+  {
+    "match_all": {
+    }
+  },
+  "aggs": {
+    "latestStatus": {
+      "terms": {
+        "field": "clusterenv.keyword"
+      },
+      "aggs": {
+        "status": {
+          "top_hits": {
+            "size": 1,
+            "_source": {
+              "include": ["@timestamp", "cluster*", "availability"]
+            },
+            "sort": [
+              {
+                "@timestamp": {
+                  "order": "desc"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "size": 0
+}

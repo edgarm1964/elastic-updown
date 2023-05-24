@@ -1,0 +1,184 @@
+{
+  "$schema": "https://vega.github.io/schema/vega/v5.json",
+  "width": 500,
+  "height": 200,
+  "padding": 0,
+  "autosize": "none",
+  "data": {
+    "name": "statusData",
+    "url": {
+      "index": "cluster-status",
+      "body": {
+        "query": {"match_all": {}},
+        "aggs": {
+          "latestStatus": {
+            "terms": {"field": "clusterenv.keyword"},
+            "aggs": {
+              "status": {
+                "top_hits": {
+                  "size": 1,
+                  "_source": {
+                    "include": [
+                      "@timestamp",
+                      "clusterenv",
+                      "clusterid",
+                      "availability",
+                      "availStatusNr"
+                    ]
+                  },
+                  "sort": [{"@timestamp": {"order": "desc"}}],
+                  "seq_no_primary_term": "true"
+                }
+              }
+            }
+          }
+        },
+        "size": 0
+      }
+    },
+    "format": {"property": "aggregations.latestStatus.buckets"},
+    "transform": [
+      #{"type": "filter", "expr": "datum.key == selectEnv"},
+      {
+        "type": "formula",
+        "expr": "datum.status.hits.hits[0]._source.availStatusNr > 0 ? 'M 10,50 l 30,30 l 50,-50 l -10, -10 l -40,40 l -20,-20 z' : 'M 15,25 l 25,25 l -25,25 l 10,10 l 25,-25 l 25,25 l 10,-10 l -25,-25 l 25,-25 l -10,-10 l -25,25 l -25,-25 z'",
+        "as": "tickPath"
+      },
+      {
+        "type": "formula",
+        "expr": "datum.status.hits.hits[0]._source.availStatusNr > 0 ? 'green' : 'red'",
+        "as": "tickColour"
+      },
+      {
+        "type": "formula",
+        "expr": "datum.status.hits.hits[0]._source.clusterenv",
+        "as": "clusterEnvironment"
+      },
+      {
+        "type": "formula",
+        "expr": "datum.status.hits.hits[0]._source.availability",
+        "as": "availability"
+      },
+      {
+        "type": "identifier",
+        "as": "nr"
+      },
+      {
+        "type": "formula",
+        "expr": "(datum.nr - 1) * 100",
+        "as": "xLoc"
+      },
+      {
+        "type": "formula",
+        "expr": "datum.xLoc + 5",
+        "as": "boundingBoxX"
+      },
+      {
+        "type": "formula",
+        "expr": "datum.xLoc + 10",
+        "as": "backgroundBoxX"
+      }
+    ]
+  },
+  "background": "white",
+  "marks": [
+    {
+      "type": "rect",
+      "from": {"data": "statusData"},
+      "encode": {
+        "enter": {
+          "y": { "value": 10 },
+          "width": { "value": 80 },
+          "height": { "value": 80 },
+          "stroke": { "value": "#eeeeee"},
+          "zindex": 0,
+          "fill": { "value": "#eeeeee" },
+          "strokeWidth": { "value": 2 },
+          "opacity": { "value": 1 }
+        },
+        "update": {
+          "x": { "field": "backgroundBoxX" }
+        }
+      }
+    },
+    {
+      "type": "path",
+      "from": {"data": "statusData"},
+      "encode": {
+        "update": {
+          "path": {"field": "tickPath"},
+          "x": {"field": "xLoc"},
+          "y": {"value": 0},
+          "stroke": {"value": "1"},
+          "opacity": {"value": 1},
+          "fill": {"field": "tickColour"},
+          "scaleX": {"value": 1},
+          "scaleY": {"value": 1},
+          "zindex": 2
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {"data": "statusData"},
+      "encode": {
+        "enter": {
+          "font": {"value": "inter"},
+          "fontSize": {"value": 12},
+          "align": {"value": "left"},
+          "baseline": {"value": "bottom"},
+          "stroke": {"value": "black"},
+          "fill": {"value": "black"},
+          # "x": {"value": 3},
+          "y": {"value": 105},
+          "dx": { "value": 8 },
+          "zindex": 2
+        },
+        "update": {
+          "text": {"field": "clusterEnvironment"},
+          "x": {"field": "xLoc"}
+        }
+      }
+    },
+    {
+      "type": "text",
+      "from": {"data": "statusData"},
+      "encode": {
+        "enter": {
+          "font": {"value": "inter"},
+          "fontSize": {"value": 12},
+          "align": {"value": "left"},
+          "baseline": {"value": "bottom"},
+          "stroke": {"value": "black"},
+          "fill": {"value": "black"},
+          # "x": {"value": 3},
+          "y": {"value": 125},
+          "dx": { "value": 8 },
+          "zindex": 2
+        },
+        "update": {
+          "text": {"field": "availability"},
+          "x": {"field": "xLoc"}
+        }
+      }
+    },
+    {
+      "type": "rect",
+      "from": {"data": "statusData"},
+      "encode": {
+        "enter": {
+          "y": { "value": 5 },
+          "width": { "value": 90 },
+          "height": { "value": 130 },
+          "stroke": { "value": "#aaaaaa"},
+          "zindex": 2,
+          "strokeWidth": { "value": 2 },
+          "opacity": { "value": 1 }
+        },
+        "update": {
+          "x": { "field": "boundingBoxX" }
+        }
+      }
+    }
+  ]
+}
