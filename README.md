@@ -1,6 +1,6 @@
 # elastic-updown
 
-`Elastic-updown` contains an elesticsearch visual, logstash configuration and
+`Elastic-updown` contains an elasticsearch/kibana visual, logstash configuration and
 a little script to enter some "sample" data into elasticsearch.
 
 ## Visual
